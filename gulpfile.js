@@ -54,6 +54,7 @@ var GENERIC_DIR = BUILD_DIR + "generic/";
 var GENERIC_ES5_DIR = BUILD_DIR + "generic-es5/";
 var COMPONENTS_DIR = BUILD_DIR + "components/";
 var COMPONENTS_ES5_DIR = BUILD_DIR + "components-es5/";
+var DAF_DIR = BUILD_DIR + "daf/";
 var IMAGE_DECODERS_DIR = BUILD_DIR + "image_decoders";
 var DEFAULT_PREFERENCES_DIR = BUILD_DIR + "default_preferences/";
 var MINIFIED_DIR = BUILD_DIR + "minified/";
@@ -847,6 +848,38 @@ gulp.task(
     });
 
     return buildComponents(defines, COMPONENTS_ES5_DIR);
+  })
+);
+
+function buildDAF(defines, dir) {
+  rimraf.sync(dir);
+
+  return merge([
+    createBundle(defines).pipe(gulp.dest(dir + "build")),
+    createComponentsBundle(defines).pipe(gulp.dest(dir + "build")),
+
+    gulp.src("LICENSE").pipe(gulp.dest(dir)),
+
+    gulp
+      .src(["web/locale/*/viewer.properties", "web/locale/locale.properties"], {base: "web/"})
+      .pipe(gulp.dest(dir + "web")),
+
+    gulp
+      .src(["external/bcmaps/*.bcmap", "external/bcmaps/LICENSE"], {base: "external/bcmaps"})
+      .pipe(gulp.dest(dir + "web/cmaps")),
+  ]);
+}
+
+gulp.task(
+  'daf',
+  gulp.series("buildnumber", "default_preferences", "locale", function () {
+    console.log();
+    console.log('### Creating daf viewer');
+    console.log(DAF_DIR + 'build/pdf.js');
+
+    var defines = builder.merge(DEFINES, { COMPONENTS: true, GENERIC: true });
+
+    return buildDAF(defines, DAF_DIR);
   })
 );
 
